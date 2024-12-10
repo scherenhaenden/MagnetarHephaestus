@@ -1,43 +1,31 @@
-package BusinessLogic.Services
+package Common
 
-import BusinessLogic.Models.BusinessModel
-import Common.FileTypeUtils
-
+import BusinessLogic.Models.APIModeler
 import kotlinx.serialization.json.Json
 import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.DumperOptions
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import org.w3c.dom.NodeList
 
 
 object FileParser {
 
-    fun parseToModel(input: String): BusinessModel {
+    fun parseToModel(input: String): APIModeler {
         val fileType = FileTypeUtils.determineFileType(input)
-        val jsonInput = when (fileType) {
+        val jsonString = when (fileType) {
             "JSON" -> input
             "YAML" -> yamlToJson(input)
             "XML" -> xmlToJson(input)
             else -> throw IllegalArgumentException("Unsupported file type: $fileType")
         }
-        return parseJson(jsonInput)
-    }
-
-    private fun parseJson(input: String): BusinessModel {
-        return try {
-            Json.decodeFromString(BusinessModel.serializer(), input)
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Invalid JSON structure", e)
-        }
+        return JsonHelper.deserialize(jsonString)
     }
 
     private fun yamlToJson(input: String): String {
         return try {
             val yaml = Yaml()
             val map = yaml.load<Map<String, Any>>(input)
-            Json.encodeToString(map)
+            JsonHelper.serialize(map)
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid YAML structure", e)
         }
@@ -48,7 +36,7 @@ object FileParser {
             val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(input.byteInputStream())
             val root = document.documentElement
             val map = elementToMap(root)
-            Json.encodeToString(map)
+            JsonHelper.serialize(map)
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid XML structure", e)
         }
