@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - build
-      - models-definition
   pull_request:
     branches:
       - build
