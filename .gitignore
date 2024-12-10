@@ -44,3 +44,4 @@ bin/
 ### Mac OS ###
 .DS_Store.idea/
 .idea/kotlinc.xml
+.idea/codeStyles/codeStyleConfig.xml
