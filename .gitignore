@@ -45,3 +45,4 @@ bin/
 .DS_Store.idea/
 .idea/kotlinc.xml
 .idea/codeStyles/codeStyleConfig.xml
+.idea/
