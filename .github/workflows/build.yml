@@ -1,90 +1,34 @@
-name: Build and Release Application
+name: Build Application
 
 on:
   push:
     branches:
       - build
-
-permissions:
-  contents: write
+  pull_request:
+    branches:
+      - ‚build
 
 jobs:
-  build-and-release:
-    runs-on: ubuntu-24.04
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      # Display current working directory before checkout
-      - name: Print current working directory
-        run: pwd
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # List files before checkout
-      - name: List files before checkout
-        run: ls -al
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-cache-${{ runner.os }}
 
-      # Display current working directory after checkout
-      - name: Print current working directory after checkout
-        run: pwd
-
-      # List files after checkout
-      - name: List files after checkout
-        run: ls -al
-
-      # Set up Java 17
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      # Cache Gradle dependencies
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-cache-${{ runner.os }}
-
-      # Build the application using Gradle
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      # List files in the build/libs directory to verify build output
-      - name: List build artifacts
-        run: ls -l ./build/libs
-
-      # Rename JAR if necessary
-      - name: Rename JAR
-        run: mv ./build/libs/*.jar ./build/libs/application.jar
-
-      # Install GitHub CLI
-      - name: Install GitHub CLI
-        run: sudo apt-get install -y gh
-
-      # Authenticate gh-cli using the GitHub token
-      - name: Authenticate GitHub CLI
-        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-
-      # Create a release for "build-only" tag
-      - name: Create Build-Only Release
-        run: gh release create build-only ./build/libs/application.jar \
-          --title "Build Only Release" \
-          --notes "Build artifact for application" \
-          --prerelease \
-          --clobber
-
-      # Verify publish directory
-      - name: List contents of publish directory
-        run: ls -l ./publish
-
-      # Create a release for "publish-only" tag
-      - name: Create Publish-Only Release
-        run: gh release create publish-only ./publish/output.zip \
-          --title "Publish Only Release" \
-          --notes "Publish output artifact for application" \
-          --prerelease \
-          --clobber
+    - name: Build with Gradle
+      run: ./gradlew build
