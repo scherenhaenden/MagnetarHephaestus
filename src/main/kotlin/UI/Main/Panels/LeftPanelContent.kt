@@ -70,7 +70,7 @@ private val defaultJson = """
   "outputLanguage": ["C#", "TypeScript", "Kotlin", "Python", "Java"],
   "modelDetails": {
     "domain": "CustomerManagement",
-    "layer": "BusinessLogic",
+    "layer": ["BusinessLogic", "DataLayer", "Presentation"], 
     "direction": "Input"
   },
   "models": [

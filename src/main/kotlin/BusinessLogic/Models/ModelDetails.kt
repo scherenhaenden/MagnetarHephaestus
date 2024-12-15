@@ -24,7 +24,7 @@ data class APIModeler(
 @Serializable
 data class ModelDetails(
     val domain: String,
-    val layer: String,
+    val layer: Array<String> = arrayOf(),
     val direction: String
 )
 
