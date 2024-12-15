@@ -19,10 +19,6 @@ repositories {
 }
 
 dependencies {
-    // Note, if you develop a library, you should use compose.desktop.common.
-    // compose.desktop.currentOs should be used in launcher-sourceSet
-    // (in a separate module for demo project and in testMain).
-    // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1") // For JSON parsing
     implementation("org.yaml:snakeyaml:2.0") // For YAML parsing
@@ -33,9 +29,6 @@ dependencies {
     implementation("com.beust:klaxon:5.6") // Or the latest version
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-
-    //implementation("androidx.compose.ui:ui:1.7.5") // Compose UI library
-    //implementation("androidx.compose.foundation:foundation:1.7.5") // Foundation for gestures
 }
 
 compose.desktop {
@@ -43,9 +36,19 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
             packageName = "MagnetarHephaestus"
             packageVersion = "1.0.0"
+
+            windows {
+                iconFile.set(project.file("src/main/resources/icons/app_icon.ico"))
+            }
+            macOS {
+                iconFile.set(project.file("src/main/resources/icons/app_icon.icns"))
+            }
+            linux {
+                iconFile.set(project.file("src/main/resources/icons/app_icon.png"))
+            }
         }
     }
 }
