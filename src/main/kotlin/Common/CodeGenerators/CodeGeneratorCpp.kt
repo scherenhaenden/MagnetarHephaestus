@@ -1,10 +1,10 @@
-package Common
+package Common.CodeGenerators
 
 import BusinessLogic.Models.APIModeler
 import BusinessLogic.Models.Field
 import BusinessLogic.Models.Model
 
-class CodeGeneratorPython : CodeGenerator {
+class CodeGeneratorCpp : CodeGenerator {
     override fun generateCode(
         apiModeler: APIModeler,
         includeComments: Boolean,
@@ -12,7 +12,9 @@ class CodeGeneratorPython : CodeGenerator {
         layerModels: Boolean
     ): String {
         val code = StringBuilder()
-        code.append("# Generated code for ${apiModeler.modelName}\n\n")
+        code.append("// Generated code for ${apiModeler.modelName}\n\n")
+        code.append("#include <string>\n")
+        code.append("#include <vector>\n\n")
 
         apiModeler.models.forEach { model ->
             if (layerModels) {
@@ -30,6 +32,11 @@ class CodeGeneratorPython : CodeGenerator {
 
     private fun generateModelCode(model: Model, includeComments: Boolean, layer: String? = null): String {
         val code = StringBuilder()
+        if (includeComments) {
+            code.append("/*\n")
+            code.append(" * ${model.description}\n")
+            code.append(" */\n")
+        }
 
         // Generate class name with layer (if provided)
         val className = if (layer != null) {
@@ -37,46 +44,37 @@ class CodeGeneratorPython : CodeGenerator {
         } else {
             model.name
         }
-
-        if (includeComments) {
-            code.append("class $className:\n")
-            code.append("    \"\"\"\n")
-            code.append("    ${model.description}\n")
-            code.append("    \"\"\"\n")
-        } else {
-            code.append("class $className:\n")
-        }
+        code.append("class $className {\n")
+        code.append("public:\n")
 
         model.fields.forEach { field ->
             code.append(generateFieldCode(field, includeComments))
         }
-        if (model.fields.isEmpty()) {
-            code.append("    pass\n")
-        }
-        code.append("\n")
+        code.append("};\n\n")
         return code.toString()
     }
+
 
     private fun generateFieldCode(field: Field, includeComments: Boolean): String {
         val code = StringBuilder()
-
         if (includeComments && field.description.isNotEmpty()) {
-            code.append("    # ${field.description}\n")
+            code.append("\t/*\n")
+            code.append("\t * ${field.description}\n")
+            code.append("\t */\n")
         }
-
-        val pythonType = getPythonType(field.dataType)
-        code.append("    ${field.name}: $pythonType\n")
-
+        val cppType = getCppType(field.dataType)
+        code.append("\t$cppType ${field.name};\n")
         return code.toString()
     }
 
-    private fun getPythonType(kotlinType: String): String {
+    private fun getCppType(kotlinType: String): String {
         return when (kotlinType.lowercase()) {
-            "string" -> "str"
+            "string" -> "std::string"
             "int" -> "int"
-            "float", "double" -> "float"
             "boolean" -> "bool"
-            else -> "Any"
+            "float" -> "float"
+            "double" -> "double"
+            else -> "auto" // Or a more specific type if possible
         }
     }
 }

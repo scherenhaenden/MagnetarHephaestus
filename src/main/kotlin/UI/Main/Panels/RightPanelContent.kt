@@ -11,7 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import BusinessLogic.Models.APIModeler
-import Common.*
+import Common.CodeGenerators.*
 
 @Composable
 fun RightPanelContent(apiModeler: APIModeler?) {

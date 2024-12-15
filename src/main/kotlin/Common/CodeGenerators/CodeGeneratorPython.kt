@@ -1,10 +1,10 @@
-package Common
+package Common.CodeGenerators
 
 import BusinessLogic.Models.APIModeler
 import BusinessLogic.Models.Field
 import BusinessLogic.Models.Model
 
-class CodeGeneratorGo : CodeGenerator {
+class CodeGeneratorPython : CodeGenerator {
     override fun generateCode(
         apiModeler: APIModeler,
         includeComments: Boolean,
@@ -12,8 +12,7 @@ class CodeGeneratorGo : CodeGenerator {
         layerModels: Boolean
     ): String {
         val code = StringBuilder()
-        code.append("// Generated code for ${apiModeler.modelName}\n\n")
-        code.append("package models\n\n")
+        code.append("# Generated code for ${apiModeler.modelName}\n\n")
 
         apiModeler.models.forEach { model ->
             if (layerModels) {
@@ -31,44 +30,53 @@ class CodeGeneratorGo : CodeGenerator {
 
     private fun generateModelCode(model: Model, includeComments: Boolean, layer: String? = null): String {
         val code = StringBuilder()
-        if (includeComments) {
-            code.append("// ${model.description}\n")
+
+        // Generate class name with layer (if provided)
+        val className = if (layer != null) {
+            "${model.name}${layer}Model" // Example: DogBusinessLogicModel
+        } else {
+            model.name
         }
 
-        // Generate struct name with layer (if provided)
-        val structName = if (layer != null) {
-            "${model.name.capitalize()}${layer}Model" // Example: DogBusinessLogicModel
+        if (includeComments) {
+            code.append("class $className:\n")
+            code.append("    \"\"\"\n")
+            code.append("    ${model.description}\n")
+            code.append("    \"\"\"\n")
         } else {
-            model.name.capitalize()
+            code.append("class $className:\n")
         }
-        code.append("type $structName struct {\n")
 
         model.fields.forEach { field ->
             code.append(generateFieldCode(field, includeComments))
         }
-        code.append("}\n\n")
+        if (model.fields.isEmpty()) {
+            code.append("    pass\n")
+        }
+        code.append("\n")
         return code.toString()
     }
 
     private fun generateFieldCode(field: Field, includeComments: Boolean): String {
         val code = StringBuilder()
+
         if (includeComments && field.description.isNotEmpty()) {
-            code.append("\t// ${field.description}\n")
+            code.append("    # ${field.description}\n")
         }
-        val goType = getGoType(field.dataType)
-        val goName = field.name.capitalize() // Go uses capitalized field names for public access
-        code.append("\t$goName $goType `json:\"${field.name}\"`\n")
+
+        val pythonType = getPythonType(field.dataType)
+        code.append("    ${field.name}: $pythonType\n")
+
         return code.toString()
     }
 
-    private fun getGoType(kotlinType: String): String {
+    private fun getPythonType(kotlinType: String): String {
         return when (kotlinType.lowercase()) {
-            "string" -> "string"
+            "string" -> "str"
             "int" -> "int"
+            "float", "double" -> "float"
             "boolean" -> "bool"
-            "float" -> "float32"
-            "double" -> "float64"
-            else -> "interface{}"
+            else -> "Any"
         }
     }
 }

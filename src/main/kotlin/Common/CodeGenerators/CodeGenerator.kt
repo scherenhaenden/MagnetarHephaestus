@@ -1,4 +1,4 @@
-package Common
+package Common.CodeGenerators
 import BusinessLogic.Models.APIModeler
 
 

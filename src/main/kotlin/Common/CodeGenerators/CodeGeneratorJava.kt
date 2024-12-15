@@ -1,10 +1,10 @@
-package Common
+package Common.CodeGenerators
 
 import BusinessLogic.Models.APIModeler
 import BusinessLogic.Models.Field
 import BusinessLogic.Models.Model
 
-class CodeGeneratorTypeScript : CodeGenerator {
+class CodeGeneratorJava : CodeGenerator {
     override fun generateCode(
         apiModeler: APIModeler,
         includeComments: Boolean,
@@ -63,7 +63,7 @@ class CodeGeneratorTypeScript : CodeGenerator {
         } else {
             model.name
         }
-        code.append("export class $className {\n")
+        code.append("public class $className {\n")
 
         model.fields.forEach { field ->
             code.append(generateFieldCode(field, includeComments, includeDecorators))
@@ -85,18 +85,25 @@ class CodeGeneratorTypeScript : CodeGenerator {
             code.append("     */\n")
         }
 
-        val tsType = getTypeScriptType(field.dataType)
-        code.append("    public ${field.name}: $tsType;\n")
+        if (includeDecorators) {
+            if (field.constraints.required) {
+                code.append("    @NotNull\n")
+            }
+        }
+
+        val javaType = getJavaType(field.dataType)
+        code.append("    private $javaType ${field.name};\n")
 
         return code.toString()
     }
 
-    private fun getTypeScriptType(kotlinType: String): String {
+    private fun getJavaType(kotlinType: String): String {
         return when (kotlinType.lowercase()) {
-            "string" -> "string"
-            "int", "float", "double" -> "number"
+            "string" -> "String"
+            "int" -> "int"
+            "float", "double" -> "double"
             "boolean" -> "boolean"
-            else -> "any"
+            else -> "Object"
         }
     }
 
@@ -112,15 +119,13 @@ class CodeGeneratorTypeScript : CodeGenerator {
             code.append(" * Maps ${model.name}$sourceLayer to ${model.name}$targetLayer\n")
             code.append(" */\n")
         }
-        code.append(
-            "export const map${model.name}${sourceLayer}To${model.name}${targetLayer} = (source: ${model.name}$sourceLayer): ${model.name}$targetLayer => ({\n"
-        )
-        code.append("    return {\n")
+        code.append("public static ${model.name}$targetLayer ModelMapper(${model.name}$sourceLayer source) {\n")
+        code.append("    ${model.name}$targetLayer target = new ${model.name}$targetLayer();\n")
         model.fields.forEach { field ->
-            code.append("        ${field.name}: source.${field.name},\n")
+            code.append("    target.${field.name} = source.${field.name};\n")
         }
-        code.append("    };\n")
-        code.append("});\n\n")
+        code.append("    return target;\n")
+        code.append("}\n\n")
         return code.toString()
     }
 }

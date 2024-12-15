@@ -1,10 +1,10 @@
-package Common
+package Common.CodeGenerators
 
 import BusinessLogic.Models.APIModeler
 import BusinessLogic.Models.Field
 import BusinessLogic.Models.Model
 
-class CodeGeneratorKotlin : CodeGenerator {
+class CodeGeneratorTypeScript : CodeGenerator {
     override fun generateCode(
         apiModeler: APIModeler,
         includeComments: Boolean,
@@ -40,6 +40,7 @@ class CodeGeneratorKotlin : CodeGenerator {
                 code.append(generateModelCode(model, includeComments, includeDecorators))
             }
         }
+
         return code.toString()
     }
 
@@ -62,36 +63,40 @@ class CodeGeneratorKotlin : CodeGenerator {
         } else {
             model.name
         }
-        code.append("data class $className(\n")
+        code.append("export class $className {\n")
 
-        model.fields.forEachIndexed { index, field ->
-            code.append(generateFieldCode(field, includeComments, index == model.fields.lastIndex))
+        model.fields.forEach { field ->
+            code.append(generateFieldCode(field, includeComments, includeDecorators))
         }
-        code.append(")\n\n")
+        code.append("}\n\n")
         return code.toString()
     }
 
-    private fun generateFieldCode(field: Field, includeComments: Boolean, isLast: Boolean): String {
+    private fun generateFieldCode(
+        field: Field,
+        includeComments: Boolean,
+        includeDecorators: Boolean
+    ): String {
         val code = StringBuilder()
 
         if (includeComments && field.description.isNotEmpty()) {
-            code.append("    /** ${field.description} */\n")
+            code.append("    /**\n")
+            code.append("     * ${field.description}\n")
+            code.append("     */\n")
         }
 
-        val kotlinType = getKotlinType(field.dataType)
-        code.append("    val ${field.name}: $kotlinType${if (!isLast) "," else ""}\n")
+        val tsType = getTypeScriptType(field.dataType)
+        code.append("    public ${field.name}: $tsType;\n")
 
         return code.toString()
     }
 
-    private fun getKotlinType(kotlinType: String): String {
+    private fun getTypeScriptType(kotlinType: String): String {
         return when (kotlinType.lowercase()) {
-            "string" -> "String"
-            "int" -> "Int"
-            "float" -> "Float"
-            "double" -> "Double"
-            "boolean" -> "Boolean"
-            else -> "Any"
+            "string" -> "string"
+            "int", "float", "double" -> "number"
+            "boolean" -> "boolean"
+            else -> "any"
         }
     }
 
@@ -108,14 +113,14 @@ class CodeGeneratorKotlin : CodeGenerator {
             code.append(" */\n")
         }
         code.append(
-            "fun ${model.name}$sourceLayer.ModelMapper(): ${model.name}$targetLayer {\n"
+            "export const map${model.name}${sourceLayer}To${model.name}${targetLayer} = (source: ${model.name}$sourceLayer): ${model.name}$targetLayer => ({\n"
         )
-        code.append("    return ${model.name}$targetLayer(\n")
+        code.append("    return {\n")
         model.fields.forEach { field ->
-            code.append("        ${field.name} = this.${field.name},\n")
+            code.append("        ${field.name}: source.${field.name},\n")
         }
-        code.append("    )\n")
-        code.append("}\n\n")
+        code.append("    };\n")
+        code.append("});\n\n")
         return code.toString()
     }
 }

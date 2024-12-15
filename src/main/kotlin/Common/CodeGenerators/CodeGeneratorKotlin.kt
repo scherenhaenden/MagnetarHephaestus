@@ -1,10 +1,10 @@
-package Common
+package Common.CodeGenerators
 
 import BusinessLogic.Models.APIModeler
 import BusinessLogic.Models.Field
 import BusinessLogic.Models.Model
 
-class CodeGeneratorJava : CodeGenerator {
+class CodeGeneratorKotlin : CodeGenerator {
     override fun generateCode(
         apiModeler: APIModeler,
         includeComments: Boolean,
@@ -40,7 +40,6 @@ class CodeGeneratorJava : CodeGenerator {
                 code.append(generateModelCode(model, includeComments, includeDecorators))
             }
         }
-
         return code.toString()
     }
 
@@ -63,47 +62,36 @@ class CodeGeneratorJava : CodeGenerator {
         } else {
             model.name
         }
-        code.append("public class $className {\n")
+        code.append("data class $className(\n")
 
-        model.fields.forEach { field ->
-            code.append(generateFieldCode(field, includeComments, includeDecorators))
+        model.fields.forEachIndexed { index, field ->
+            code.append(generateFieldCode(field, includeComments, index == model.fields.lastIndex))
         }
-        code.append("}\n\n")
+        code.append(")\n\n")
         return code.toString()
     }
 
-    private fun generateFieldCode(
-        field: Field,
-        includeComments: Boolean,
-        includeDecorators: Boolean
-    ): String {
+    private fun generateFieldCode(field: Field, includeComments: Boolean, isLast: Boolean): String {
         val code = StringBuilder()
 
         if (includeComments && field.description.isNotEmpty()) {
-            code.append("    /**\n")
-            code.append("     * ${field.description}\n")
-            code.append("     */\n")
+            code.append("    /** ${field.description} */\n")
         }
 
-        if (includeDecorators) {
-            if (field.constraints.required) {
-                code.append("    @NotNull\n")
-            }
-        }
-
-        val javaType = getJavaType(field.dataType)
-        code.append("    private $javaType ${field.name};\n")
+        val kotlinType = getKotlinType(field.dataType)
+        code.append("    val ${field.name}: $kotlinType${if (!isLast) "," else ""}\n")
 
         return code.toString()
     }
 
-    private fun getJavaType(kotlinType: String): String {
+    private fun getKotlinType(kotlinType: String): String {
         return when (kotlinType.lowercase()) {
             "string" -> "String"
-            "int" -> "int"
-            "float", "double" -> "double"
-            "boolean" -> "boolean"
-            else -> "Object"
+            "int" -> "Int"
+            "float" -> "Float"
+            "double" -> "Double"
+            "boolean" -> "Boolean"
+            else -> "Any"
         }
     }
 
@@ -119,12 +107,14 @@ class CodeGeneratorJava : CodeGenerator {
             code.append(" * Maps ${model.name}$sourceLayer to ${model.name}$targetLayer\n")
             code.append(" */\n")
         }
-        code.append("public static ${model.name}$targetLayer ModelMapper(${model.name}$sourceLayer source) {\n")
-        code.append("    ${model.name}$targetLayer target = new ${model.name}$targetLayer();\n")
+        code.append(
+            "fun ${model.name}$sourceLayer.ModelMapper(): ${model.name}$targetLayer {\n"
+        )
+        code.append("    return ${model.name}$targetLayer(\n")
         model.fields.forEach { field ->
-            code.append("    target.${field.name} = source.${field.name};\n")
+            code.append("        ${field.name} = this.${field.name},\n")
         }
-        code.append("    return target;\n")
+        code.append("    )\n")
         code.append("}\n\n")
         return code.toString()
     }
