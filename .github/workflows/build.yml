@@ -1,20 +1,17 @@
-name: Build Application
+name: Build and Release Application
 
 on:
   push:
     branches:
       - build
-  pull_request:
-    branches:
-      - ‚build
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-release:
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -32,3 +29,25 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew build
+
+    # Upload build artifact to release
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./build/libs/application.jar # Adjust this path to your build artifact
+        asset_name: application.jar
+        tag: 'build-only'
+        overwrite: true
+        body: "Build artifact for application"
+
+    # Upload publish artifact to release
+    - name: Upload publish artifacts to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./publish/output.zip # Adjust this path to your publish artifact
+        asset_name: output.zip
+        tag: 'publish-only'
+        overwrite: true
+        body: "Publish output artifact for application"
