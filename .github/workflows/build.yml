@@ -5,6 +5,9 @@ on:
     branches:
       - build
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
     runs-on: ubuntu-22.04
@@ -35,7 +38,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/application.jar # Adjust this path to your build artifact
+        file: ./build/libs/application.jar
         asset_name: application.jar
         tag: 'build-only'
         overwrite: true
@@ -46,7 +49,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./publish/output.zip # Adjust this path to your publish artifact
+        file: ./publish/output.zip
         asset_name: output.zip
         tag: 'publish-only'
         overwrite: true
