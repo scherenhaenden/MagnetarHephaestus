@@ -13,44 +13,49 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.gradle/caches
-        key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          gradle-cache-${{ runner.os }}
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-cache-${{ runner.os }}
 
-    - name: Build with Gradle
-      run: ./gradlew build
+      - name: Build with Gradle
+        run: ./gradlew build
 
-    # Upload build artifact to release
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/application.jar
-        asset_name: application.jar
-        tag: 'build-only'
-        overwrite: true
-        body: "Build artifact for application"
+      - name: List build artifacts
+        run: ls -l ./build/libs
 
-    # Upload publish artifact to release
-    - name: Upload publish artifacts to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./publish/output.zip
-        asset_name: output.zip
-        tag: 'publish-only'
-        overwrite: true
-        body: "Publish output artifact for application"
+      - name: Rename JAR
+        # Assuming there's only one JAR in build/libs; adjust if needed.
+        run: mv ./build/libs/*.jar ./build/libs/application.jar
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./build/libs/application.jar
+          asset_name: application.jar
+          tag: 'build-only'
+          overwrite: true
+          body: "Build artifact for application"
+
+      - name: Upload publish artifacts to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./publish/output.zip # Update this path if necessary
+          asset_name: output.zip
+          tag: 'publish-only'
+          overwrite: true
+          body: "Publish output artifact for application"
