@@ -36,10 +36,22 @@ jobs:
       - name: List build artifacts
         run: ls -l ./build/libs
 
+      # Rename the JAR if needed. This assumes only one JAR is produced.
       - name: Rename JAR
-        # Assuming there's only one JAR in build/libs; adjust if needed.
         run: mv ./build/libs/*.jar ./build/libs/application.jar
 
+      # Create a release for 'build-only' tag
+      - name: Create Release (build-only)
+        uses: actions/create-release@v1
+        with:
+          tag_name: build-only
+          release_name: "Build Only Release"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload build artifact to the 'build-only' release
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -50,11 +62,23 @@ jobs:
           overwrite: true
           body: "Build artifact for application"
 
+      # Create a release for 'publish-only' tag
+      - name: Create Release (publish-only)
+        uses: actions/create-release@v1
+        with:
+          tag_name: publish-only
+          release_name: "Publish Only Release"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload publish artifact to the 'publish-only' release
       - name: Upload publish artifacts to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./publish/output.zip # Update this path if necessary
+          file: ./publish/output.zip
           asset_name: output.zip
           tag: 'publish-only'
           overwrite: true
