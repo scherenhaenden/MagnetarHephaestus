@@ -46,3 +46,4 @@ bin/
 .idea/kotlinc.xml
 .idea/codeStyles/codeStyleConfig.xml
 .idea/
+gradle/wrapper/gradle-wrapper.jar
