@@ -5,6 +5,8 @@ import Common.CodeGenerators.CodeGenerator
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.AnnotatedString
 
 @Composable
 fun CopyCodeButton(
@@ -16,6 +18,10 @@ fun CopyCodeButton(
     layerModels: Boolean,
     onCopy: (String) -> Unit
 ) {
+
+    val clipboardManager = LocalClipboardManager.current
+
+
     Button(onClick = {
         val codeToCopy = buildString {
             selectedLanguages.forEach { language ->
@@ -35,6 +41,7 @@ fun CopyCodeButton(
             }
         }
         onCopy(codeToCopy)
+        clipboardManager.setText(AnnotatedString(codeToCopy))
     }) {
         Text("Copy Code")
     }

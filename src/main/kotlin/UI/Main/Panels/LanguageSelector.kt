@@ -17,6 +17,15 @@ fun LanguageSelector(
     val selectedLanguages = remember { mutableStateListOf<String>() }
     val generators = CodeGeneratorFactory.getGenerators()
     var codeToCopy by remember { mutableStateOf("") }
+    // MutableState for global setting
+    val globalSetting = remember { mutableStateOf("Add Decorators") }
+
+    // Call the LanguageSelectionPanel
+    LanguageSelectionPanel(
+        selectedLanguages = selectedLanguages,
+        availableLanguages = generators.keys,
+        globalSetting = globalSetting
+    )
 
     LanguageSelectionButtons(selectedLanguages, generators.keys)
     Spacer(modifier = Modifier.height(16.dp))
